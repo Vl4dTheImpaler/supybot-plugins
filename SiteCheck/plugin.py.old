@@ -1,0 +1,172 @@
+###
+# Copyright (c) 2012, Dinosaur
+# All rights reserved.
+#
+#
+###
+
+import supybot.utils as utils
+from supybot.commands import *
+import supybot.ircdb as ircdb
+import supybot.plugins as plugins
+import supybot.ircutils as ircutils
+import supybot.callbacks as callbacks
+import supybot.ircmsgs as ircmsgs
+import urllib
+import httplib
+
+targett="There is no current target"
+boosterr="There is no current booster"
+reasonn="No Reason"
+capabilityneeded='admin'
+
+codes={"100":"Continue", "101":"Switching Protocols", "200":"Successful", "201":"Created", "202":"Accepted", "203":"Non-authoritative Information", "204":"No Content", "205":"Reset Content", "206":"Partial Content", "300":"Multiple Choices", "301":"Moved Permanently", "302":"Moved Temporarily", "303":"See Other Location", "304":"Not Modified", "305":"Use Proxy", "307":"Temporary Redirect", "400":"Bad Request", "401":"Not Authorized", "403":"Forbidden", "404":"Not Found", "405":"Method Not Allowed", "406":"Not Acceptable", "407":"Proxy Authentication Required", "408":"Request Timeout", "409":"Conflict", "410":"Gone", "411":"Length Required", "412":"Precondition Failed", "413":"Request Entity Too Large", "414":"Requests URI Is Too Long", "415":"Unsupported Media Type", "416":"Requested Range Not Satisfiable", "417":"Expectation Failed", "500":"Internal Server Error", "501":"Not Implemented", "502":"Bad Gateway", "503":"Service Unavailable", "504":"Gateway Timeout", "505":"HTTP Version Not Supported"}
+
+class SiteCheck(callbacks.Plugin):
+    """Checks a site's availability and returns relevant HTTP status code"""
+    pass
+
+    def reasonset(self, irc, msg, args, text):
+        """<reason>
+
+        Sets a new reason (enclose in quotes)"""
+        global targett
+        global boosterr
+	global reasonn
+        if msg.args[0] == "#opdefense":
+            capability='admin'
+            if not ircdb.checkCapability(msg.prefix, capability):
+                irc.errorNoCapability(capability, Raise=True)
+            reasonn = text
+            irc.reply('Done.')
+    reasonset = wrap(reasonset, ['anything'])
+
+    def targetset(self, irc, msg, args, text):
+        """<target>
+
+        Sets a new target"""
+        global targett
+        global boosterr
+        if msg.args[0] == "#opdefense":
+            capability='admin'
+            if not ircdb.checkCapability(msg.prefix, capability):
+                irc.errorNoCapability(capability, Raise=True)
+            targett = text
+            irc.reply('Done.')
+    targetset = wrap(targetset, ['anything'])
+
+    def boosterset(self, irc, msg, args, text):
+        """<booster>
+
+        Sets a new booster"""
+        global targett
+        global boosterr
+        if msg.args[0] == "#opdefense":
+            capability='admin'
+            if not ircdb.checkCapability(msg.prefix, capability):
+                irc.errorNoCapability(capability, Raise=True)
+            boosterr = text
+            irc.reply('Done.')
+    boosterset = wrap(boosterset, ['anything'])
+
+    def target(self, irc, msg, args):
+        """Takes no arguments
+
+        Returns target & booster (if applicable)"""
+        if msg.args[0] == "#opdefense":
+            irc.reply('TARGET: %s | BOOSTER: %s' % (targett, boosterr))
+    target = wrap(target)
+
+    def reason(self, irc, msg, args):
+        """Takes no arguments
+
+        Returns reason for attack"""
+        if msg.args[0] == "#opdefense":
+            irc.reply('%s' % reasonn)
+    reason = wrap(reason)
+
+    def check(self, irc, msg, args):
+        """Takes no arguments
+
+        Type only ^check, do not put site after"""
+	irc.reply("Plz wait a few seconds, the scan has commenced")
+	global targett
+	taxxy = targett
+	if targett == "There is no current target":
+		irc.error('No target set', Raise=True)
+        count = taxxy.count('http://')
+        if count == 0:
+            taxxy = 'http://%s' % taxxy
+        tax = taxxy[4]
+        if tax != ":":
+            taxxy = taxxy.replace ( 'http://', '')
+            taxxy = 'http://%s' % taxxy
+        urllib.urlcleanup()
+        try:
+            status = (urllib.urlopen("%s" % taxxy).getcode())
+        except StandardError:
+            status = "Nothing"
+        if status != "Nothing":
+            message = (codes["%s" % status])
+        else:
+            message = "Site does not exist, or did not respond"
+        urllib.urlcleanup()
+        import urllib2
+        req = urllib2.Request("http://www.isup.me/%s" % taxxy)
+        responselol = urllib2.urlopen(req)
+        contentsz = responselol.read()
+	if "looks down" in contentsz:
+            statuss = "isup.me returns that %s is down" % taxxy
+        else:
+            statuss = "isup.me returns that %s is up" % taxxy
+        if status == 200:
+            irc.reply("%s looks up from here, %s" % (taxxy, statuss))
+        else:
+            irc.reply("%s may be down. Returned code %s : '%s', %s" % (taxxy, status, message, statuss))
+        urllib.urlcleanup()
+    check = wrap(check)
+
+    def checksite(self, irc, msg, args, text):
+        """<site>
+
+        Checks a site's availability, and returns HTTP code"""
+	capability='admin'
+	if not ircdb.checkCapability(msg.prefix, capability):
+		irc.errorNoCapability(capability, Raise=True)
+        count = text.count('http://')
+        if count == 0:
+            text = 'http://%s' % text
+        tax = text[4]
+        if tax != ":":
+            text = text.replace ( 'http://', '')
+            text = 'http://%s' % text
+        try:
+            status = (urllib.urlopen("%s" % text).getcode())
+        except StandardError:
+            status = "Nothing"
+        if status != "Nothing":
+            message = (codes["%s" % status])
+        else:
+            message = "Site does not exist, or did not respond"
+        if status == 200:
+            irc.reply("%s looks up from here" % text)
+        else:
+            irc.reply("%s may be down. Returned code %s : '%s'" % (text, status, message))
+    checksite = wrap(checksite, ['anything'])
+
+    def cocks(self, irc, msg, args):
+        if msg.nick == "Huh_":
+            chan = msg.args[0]
+            text = "\x037,1COCKS"
+            irc.queueMsg(ircmsgs.privmsg(chan, text))
+            irc.queueMsg(ircmsgs.privmsg(chan, text))
+            irc.queueMsg(ircmsgs.privmsg(chan, text))
+    cocks = wrap(cocks)
+
+    def doJoin(self, irc, msg):
+        if msg.args[0] == "#opdefense":
+            mess = "Welcome to #opdefense, please use ^check, ^target, and ^reason. DO NOT use !topic"
+            irc.sendMsg(ircmsgs.notice(msg.nick, mess))
+            irc.noReply()
+Class = SiteCheck
+
