@@ -8,6 +8,7 @@ import supybot.callbacks as callbacks
 import string, sys, time, urllib2, cookielib, re, random, threading, socket, os, subprocess
 import pbj
 
+url = "put booster url here"
 
 class Booster(callbacks.Plugin):
     """Add the help for "@plugin help Booster" here
@@ -23,7 +24,7 @@ class Booster(callbacks.Plugin):
             if not ircdb.checkCapability(msg.prefix, capability):
                 irc.errorNoCapability(capability, Raise=True)
         irc.reply('Booster is on its way!')      
-        req = urllib2.Request("http://designature.se/acta/?url=%s&plain" % text)
+        req = urllib2.Request(url % text)
         responselol = urllib2.urlopen(req)
         contentsz = responselol.read()
         rawr = pbj.pastehtml(contentsz)
