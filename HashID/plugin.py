@@ -37,7 +37,6 @@ from supybot.i18n import PluginInternationalization, internationalizeDocstring
 import supybot.ircmsgs as ircmsgs
 import hashidentifier
 import string, sys, time, urllib2, cookielib, re, random, threading, socket, os, subprocess
-import nmap
 
 _ = PluginInternationalization('HashID')
 
@@ -68,23 +67,6 @@ class HashID(callbacks.Plugin):
             irc.queueMsg(ircmsgs.privmsg(channell, "[+] " + identifiedhash1))
             irc.queueMsg(ircmsgs.privmsg(channell, "[+] " + identifiedhash2))
     hashid = wrap(hashid, ['anything'])
-    
-    @internalizeDocstring
-    def nmap(self, irc, msg, args, text):
-        nick = msg.nick
-        channell = msg.args[0]
-        if self.registryValue('nmap', channell):
-            if nick in irc.state.channels[channell].ops:
-                hosttoscan = text
-            else:
-                irc.error("You must have op status (mode +o) here in " + channell + " to use '^nmap.'"
-        else:
-            irc.error("This channel, " + channell + ", is not allowed to run '^nmap.' Please contact my owner (Vlad) for more information, or to activate this command")
-        if hosttoscan[4] == ":":
-            hosttoscan = hosttoscan.lstrip("http://")
-        result = nmap(hosttoscan)
-        irc.reply(result)
-    nmap = wrap(nmap, ['anything'])
 
 Class = HashID
 
