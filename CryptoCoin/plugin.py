@@ -50,18 +50,16 @@ class CryptoCoin(callbacks.Plugin):
     This should describe *how* to use this plugin."""
     pass
     
-    def __init__(self):
+    def __init__(self, irc):
         self.ltc = LitecoinRPC()
         self.btc = BitcoinRPC()
     
-    @internalizeDocstring
     def ltcbalance(self, irc, msg, args, channel):
         mess = "LTC Balance: "+self.ltc.getbalance()
         irc.queueMsg(ircmsgs.privmsg(channel, mess))
         irc.noReply()
         return
         
-    @internalizeDocstring
     def btcbalance(self, irc, msg, args, channel):
         mess = "BTC Balance: "+self.btc.getbalance()
         irc.queueMsg(ircmsgs.privmsg(channel, mess))
@@ -70,7 +68,7 @@ class CryptoCoin(callbacks.Plugin):
         
 class BitcoinRPC(object):
     def __init__(self):
-        self.conn = bitcoinrpc.connect_to_local(filename=os.path.abspath("~")+"/.bitcoin/bitcoin.conf")
+        self.conn = bitcoinrpc.connect_to_local(filename=os.path.expanduser("~")+"/.bitcoin/bitcoin.conf")
         bitcoin_list_all_address = self.conn.listreceivedbyaddress(0, True)
         all_address = []
         for item in litecoin_list_all_address:
@@ -81,7 +79,8 @@ class BitcoinRPC(object):
     
 class LitecoinRPC(object):
     def __init__(self):
-        self.conn = bitcoinrpc.connect_to_local(filename=os.path.abspath("~")+"/.litecoin/litecoin.conf")
+        print os.path.expanduser("~")+"/.litecoin/litecoin.conf"
+        self.conn = bitcoinrpc.connect_to_local(filename=os.path.expanduser("~")+"/.litecoin/litecoin.conf")
         litecoin_list_all_address = self.conn.listreceivedbyaddress(0, True)
         all_address = []
         for item in litecoin_list_all_address:
