@@ -51,43 +51,48 @@ class CryptoCoin(callbacks.Plugin):
     pass
     
     def __init__(self, irc):
+        self.__parent = super(CryptoCoin, self)
+        self.__parent.__init__(irc)
         self.ltc = LitecoinRPC()
-        self.btc = BitcoinRPC()
+        #self.btc = BitcoinRPC()
     
-    def ltcbalance(self, irc, msg, args, channel):
+    def ltcbalance(self, irc, msg, args):
+        channel = msg.args[0]
         mess = "LTC Balance: "+self.ltc.getbalance()
         irc.queueMsg(ircmsgs.privmsg(channel, mess))
         irc.noReply()
-        return
+    ltcbalance = wrap(ltcbalance)
         
-    def btcbalance(self, irc, msg, args, channel):
+    def btcbalance(self, irc, msg, args):
+        channel = msg.args[0]
         mess = "BTC Balance: "+self.btc.getbalance()
         irc.queueMsg(ircmsgs.privmsg(channel, mess))
         irc.noReply()
-        return
+    btcbalance = wrap(btcbalance)
         
 class BitcoinRPC(object):
     def __init__(self):
-        self.conn = bitcoinrpc.connect_to_local(filename=os.path.expanduser("~")+"/.bitcoin/bitcoin.conf")
-        bitcoin_list_all_address = self.conn.listreceivedbyaddress(0, True)
+        self.btcconn = bitcoinrpc.connect_to_local(filename=os.path.expanduser("~")+"/.bitcoin/bitcoin.conf")
+        bitcoin_list_all_address = self.btcconn.listreceivedbyaddress(0, True)
         all_address = []
-        for item in litecoin_list_all_address:
+        for item in bitcoin_list_all_address:
             all_address.append(item['address'])
         
     def getbalance(self):
-        return str(float(self.conn.getbalance()))
+        return str(float(self.btcconn.getbalance()))
     
 class LitecoinRPC(object):
     def __init__(self):
         print os.path.expanduser("~")+"/.litecoin/litecoin.conf"
-        self.conn = bitcoinrpc.connect_to_local(filename=os.path.expanduser("~")+"/.litecoin/litecoin.conf")
-        litecoin_list_all_address = self.conn.listreceivedbyaddress(0, True)
+        self.ltcconn = bitcoinrpc.connect_to_local(filename=os.path.expanduser("~")+"/.litecoin/litecoin.conf")
+        litecoin_list_all_address = self.ltcconn.listreceivedbyaddress(0, True)
         all_address = []
-        for item in litecoin_list_all_address:
-            all_address.append(item['address'])
+        print litecoin_list_all_address
+        #for item in litecoin_list_all_address:
+            #all_address.append(item['address'])
         
     def getbalance(self):
-        return str(float(self.conn.getbalance()))
+        return str(float(self.ltcconn.getbalance()))
 
 
 Class = CryptoCoin
